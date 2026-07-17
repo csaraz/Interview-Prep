@@ -18,6 +18,7 @@ const CATEGORY_ORDER = [
   'EF Core',
   'SQL & Database',
   'Patterns & Architecture',
+  'DevOps & Cloud',
   'Testing',
   'Frontend',
   'Interview Lists',
