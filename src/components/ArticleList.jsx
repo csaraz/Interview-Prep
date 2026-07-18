@@ -19,6 +19,9 @@ export default function ArticleList() {
   const [status, setStatus] = useState(null)
   const [page, setPage] = useState(1)
   const [state, setState] = useState(getState())
+  const [filtersOpen, setFiltersOpen] = useState(
+    () => typeof window !== 'undefined' && window.innerWidth > 700
+  )
 
   const readSet = useMemo(() => new Set(state.read), [state])
   const favSet = useMemo(() => new Set(state.favs), [state])
@@ -45,6 +48,7 @@ export default function ArticleList() {
 
   const readCount = articles.filter((a) => readSet.has(a.slug)).length
   const progressPct = Math.round((readCount / articles.length) * 100)
+  const activeFilterCount = [level, category, tag, status].filter(Boolean).length
 
   const resetPage = (fn) => (v) => {
     fn(v)
@@ -84,51 +88,61 @@ export default function ArticleList() {
         onChange={(e) => resetPage(setQuery)(e.target.value)}
       />
 
-      <div className="filter-row">
-        {LEVELS.map((l) => (
-          <button
-            key={l}
-            className={`chip level-${l.toLowerCase()} ${level === l ? 'active' : ''}`}
-            onClick={() => resetPage(setLevel)(level === l ? null : l)}
-          >
-            {l}
-          </button>
-        ))}
-        <span className="chip-divider" />
-        {STATUS_FILTERS.map((s) => (
-          <button
-            key={s.id}
-            className={`chip ${status === s.id ? 'active' : ''}`}
-            onClick={() => resetPage(setStatus)(status === s.id ? null : s.id)}
-          >
-            {s.label}
-          </button>
-        ))}
-      </div>
+      <button className="filters-toggle" onClick={() => setFiltersOpen(!filtersOpen)}>
+        <span className={`arrow ${filtersOpen ? 'open' : ''}`}>▸</span>
+        Filters
+        {activeFilterCount > 0 && <span className="filter-count">{activeFilterCount}</span>}
+      </button>
 
-      <div className="filter-row">
-        {allCategories.map((c) => (
-          <button
-            key={c}
-            className={`chip ${category === c ? 'active' : ''}`}
-            onClick={() => resetPage(setCategory)(category === c ? null : c)}
-          >
-            {c}
-          </button>
-        ))}
-      </div>
+      {filtersOpen && (
+        <div className="filters-body">
+          <div className="filter-row">
+            {LEVELS.map((l) => (
+              <button
+                key={l}
+                className={`chip level-${l.toLowerCase()} ${level === l ? 'active' : ''}`}
+                onClick={() => resetPage(setLevel)(level === l ? null : l)}
+              >
+                {l}
+              </button>
+            ))}
+            <span className="chip-divider" />
+            {STATUS_FILTERS.map((s) => (
+              <button
+                key={s.id}
+                className={`chip ${status === s.id ? 'active' : ''}`}
+                onClick={() => resetPage(setStatus)(status === s.id ? null : s.id)}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
 
-      <div className="filter-row tags-row">
-        {allTags.map((t) => (
-          <button
-            key={t}
-            className={`chip small ${tag === t ? 'active' : ''}`}
-            onClick={() => resetPage(setTag)(tag === t ? null : t)}
-          >
-            {t}
-          </button>
-        ))}
-      </div>
+          <div className="filter-row">
+            {allCategories.map((c) => (
+              <button
+                key={c}
+                className={`chip ${category === c ? 'active' : ''}`}
+                onClick={() => resetPage(setCategory)(category === c ? null : c)}
+              >
+                {c}
+              </button>
+            ))}
+          </div>
+
+          <div className="filter-row tags-row">
+            {allTags.map((t) => (
+              <button
+                key={t}
+                className={`chip small ${tag === t ? 'active' : ''}`}
+                onClick={() => resetPage(setTag)(tag === t ? null : t)}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <p className="count">{filtered.length} article{filtered.length === 1 ? '' : 's'}</p>
 

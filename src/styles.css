@@ -274,6 +274,39 @@ html, body {
   margin: 2px 4px;
 }
 
+.filters-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 9px 16px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  margin-bottom: 10px;
+  width: 100%;
+}
+.filters-toggle:hover { border-color: var(--accent); }
+.filters-toggle .arrow {
+  display: inline-block;
+  transition: transform 0.15s;
+  color: var(--accent);
+}
+.filters-toggle .arrow.open { transform: rotate(90deg); }
+.filter-count {
+  background: var(--accent);
+  color: #fff;
+  border-radius: 999px;
+  padding: 1px 9px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-left: auto;
+}
+
+.filters-body { margin-bottom: 4px; }
+
 .card-icons {
   margin-left: auto;
   display: flex;
