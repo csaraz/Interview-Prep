@@ -55,7 +55,24 @@ return data;
 
 ## Redis vs Hazelcast (a real migration question)
 
-Both are in-memory data grids/caches. Redis wins on: operational simplicity, ecosystem/client maturity, managed offerings, and single-threaded predictable performance. Hazelcast embeds into the JVM app process; in .NET shops it's an odd fit — which is exactly why migrations to Redis happen.
+**What they are:** Hazelcast is an **In-Memory Data Grid (IMDG)** from the Java world — its signature mode is *embedded*: the cache lives inside the application's own process, nodes cluster together, data is partitioned across them, and it can even run distributed computations on the node holding the data. Redis is a standalone **client-server** in-memory store: apps connect over the network to a separate process.
+
+| | Hazelcast | Redis |
+|---|---|---|
+| Model | **Embedded** in app process (or client-server) | **Client-server** (separate process) |
+| Ecosystem | JVM-native (first-class in Java) | Language-agnostic, first-class clients everywhere |
+| Data | Objects (Java serialization) | Data structures (string, hash, zset, stream) |
+| Distributed compute | Yes (entry processors, executors) | No (Lua scripting is a different thing) |
+| Latency | Ultra-low in embedded mode (no network hop) | Sub-ms, but a network hop exists |
+| Operations | Cluster lives with the app — deploy/memory coupled | Managed separately; mature hosted options (Azure Cache, ElastiCache) |
+
+**When Hazelcast makes sense:** JVM monolith, ultra-low-latency where even a network hop is too much (trading), distributed computation over cached data.
+
+**When Redis makes sense:** polyglot/microservices environment, **stateless services** (cache must live *outside* the process), shared state like rate limiting/sessions/locks, operational simplicity and managed hosting.
+
+**The migration answer (interview-ready):**
+
+> "Three reasons. First, ecosystem fit: we're a .NET shop — Hazelcast is JVM-native and its .NET client is a second-class citizen, while Redis has first-class clients everywhere. Second, statelessness: Hazelcast's embedded model couples cache state to application processes — exactly what we were eliminating; moving cache out of process into Redis is what made our consumers stateless and horizontally scalable. Third, operations: Redis is simpler to run with mature managed offerings, and one shared Redis serves caching, rate limiting, and distributed locks. We weren't using Hazelcast's real differentiator — distributed compute — so we were paying its complexity for nothing."
 
 ## Interview one-liners
 
