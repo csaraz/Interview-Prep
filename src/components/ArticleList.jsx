@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { articles, allTags, allCategories, LEVELS } from '../lib/content.js'
-import { getState, toggleIn } from '../lib/store.js'
+import { getState, toggleIn, getRecentlyViewed, getVisitStats } from '../lib/store.js'
 
 const PAGE_SIZE = 12
 
@@ -49,6 +49,13 @@ export default function ArticleList() {
   const readCount = articles.filter((a) => readSet.has(a.slug)).length
   const progressPct = Math.round((readCount / articles.length) * 100)
   const activeFilterCount = [level, category, tag, status].filter(Boolean).length
+  const recent = useMemo(
+    () => getRecentlyViewed(4)
+      .map((v) => ({ ...v, article: articles.find((a) => a.slug === v.slug) }))
+      .filter((v) => v.article),
+    [state]
+  )
+  const visitStats = useMemo(() => getVisitStats(), [state])
 
   const resetPage = (fn) => (v) => {
     fn(v)
@@ -76,9 +83,21 @@ export default function ArticleList() {
           <div className="progress-fill" style={{ width: `${progressPct}%` }} />
         </div>
         <span className="progress-label">
-          {readCount}/{articles.length} read · {progressPct}%
+          {readCount}/{articles.length} read · {progressPct}% · {visitStats.opened} opened
         </span>
       </div>
+
+      {recent.length > 0 && (
+        <div className="recent-strip">
+          <span className="recent-label">Continue</span>
+          {recent.map((r) => (
+            <a key={r.slug} className="recent-chip" href={`#/article/${r.slug}`}>
+              {r.article.title}
+              {r.count > 1 && <span className="recent-count">{r.count}×</span>}
+            </a>
+          ))}
+        </div>
+      )}
 
       <input
         className="search"
@@ -153,6 +172,11 @@ export default function ArticleList() {
               <span className={`badge level-${a.level.toLowerCase()}`}>{a.level}</span>
               <span className="category">{a.category}</span>
               <span className="card-icons">
+                {state.visits[a.slug] && (
+                  <span className="visit-mark" title={`Opened ${state.visits[a.slug].count}×`}>
+                    {state.visits[a.slug].count}×
+                  </span>
+                )}
                 {readSet.has(a.slug) && <span className="read-mark" title="Read">✓</span>}
                 <button
                   className={`fav-btn ${favSet.has(a.slug) ? 'is-fav' : ''}`}

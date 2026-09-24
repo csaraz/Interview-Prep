@@ -1,12 +1,17 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
 import { articles } from '../lib/content.js'
-import { getState, toggleIn } from '../lib/store.js'
+import { getState, toggleIn, recordVisit } from '../lib/store.js'
 
 export default function ArticleView({ article }) {
   const [state, setState] = useState(getState())
+
+  // Track every open of this article (count + timestamp), local only.
+  useEffect(() => {
+    if (article) setState({ ...recordVisit(article.slug) })
+  }, [article?.slug])
 
   if (!article) {
     return (

@@ -440,3 +440,59 @@ html, body {
   .markdown pre { font-size: 0.8rem; }
   .flashcard-front { font-size: 1.15rem; }
 }
+
+/* ---------- visit tracking (recently viewed + open counts) ---------- */
+
+.recent-strip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: thin;
+}
+.recent-label {
+  color: var(--text-dim);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.recent-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--accent);
+  border-radius: 8px;
+  padding: 5px 12px;
+  font-size: 0.82rem;
+  color: var(--text);
+  text-decoration: none;
+  white-space: nowrap;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+}
+.recent-chip:hover { border-color: var(--accent); }
+.recent-count {
+  color: var(--text-dim);
+  font-size: 0.72rem;
+  flex-shrink: 0;
+}
+
+.visit-mark {
+  color: var(--text-dim);
+  font-size: 0.72rem;
+  background: var(--surface-2);
+  border-radius: 4px;
+  padding: 1px 6px;
+}
+
+@media (max-width: 600px) {
+  .recent-chip { max-width: 170px; }
+}
