@@ -1,0 +1,82 @@
+# Codemagic CI — Mac-less iOS build for Interview Prep (Capacitor 8 / SPM).
+#
+# One-time setup in the Codemagic UI:
+#   1) Team → Integrations → App Store Connect → the existing API key named "CodemagicAPIKey"
+#   2) Run the `ios-bootstrap` workflow ONCE — it registers the Bundle ID and creates
+#      the signing certificate/profile automatically (no Apple Developer portal clicking).
+#   3) Create the app in App Store Connect (the Bundle ID now exists in the dropdown),
+#      put its numeric App ID into APP_STORE_APPLE_ID below, then run `ios-testflight`.
+
+definitions:
+  base: &base
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: CodemagicAPIKey
+    environment:
+      vars:
+        BUNDLE_ID: "com.araz.interviewprep"
+        XCODE_PROJECT: "ios/App/App.xcodeproj"
+        XCODE_SCHEME: "App"
+      node: 20
+      xcode: latest
+  build_steps: &build_steps
+    - name: Install npm dependencies
+      script: npm ci || npm install
+    - name: Web build + Capacitor sync
+      script: |
+        npm run build
+        npx cap sync ios
+    - name: Signing (creates Bundle ID, certificate and profile if missing)
+      script: |
+        set -e
+        keychain initialize
+        openssl genrsa -out /tmp/cert_key.pem 2048
+        app-store-connect fetch-signing-files "$BUNDLE_ID" \
+          --type IOS_APP_STORE \
+          --certificate-key @file:/tmp/cert_key.pem \
+          --create
+        keychain add-certificates
+        xcode-project use-profiles
+
+workflows:
+  # Run this first — no App Store Connect app record needed.
+  ios-bootstrap:
+    <<: *base
+    name: Interview Prep — bootstrap signing + IPA
+    scripts:
+      - *build_steps
+      - name: Build IPA
+        script: xcode-project build-ipa --project "$XCODE_PROJECT" --scheme "$XCODE_SCHEME"
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+
+  # Run this once the app exists in App Store Connect and APP_STORE_APPLE_ID is filled in.
+  ios-testflight:
+    <<: *base
+    name: Interview Prep — iOS TestFlight
+    environment:
+      vars:
+        BUNDLE_ID: "com.araz.interviewprep"
+        APP_STORE_APPLE_ID: 0            # <-- replace with the numeric App Store Connect app ID
+        XCODE_PROJECT: "ios/App/App.xcodeproj"
+        XCODE_SCHEME: "App"
+      node: 20
+      xcode: latest
+    scripts:
+      - *build_steps
+      - name: Bump build number
+        script: |
+          cd ios/App
+          LATEST=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID" 2>/dev/null || echo 0)
+          agvtool new-version -all $(($LATEST + 1))
+      - name: Build IPA
+        script: xcode-project build-ipa --project "$XCODE_PROJECT" --scheme "$XCODE_SCHEME"
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
