@@ -19,7 +19,7 @@ workflows:
         BUNDLE_ID: "com.araz.interviewprep"
         XCODE_PROJECT: "ios/App/App.xcodeproj"
         XCODE_SCHEME: "App"
-      node: 20
+      node: 22
       xcode: latest
     scripts:
       - name: Install npm dependencies
@@ -57,7 +57,7 @@ workflows:
         APP_STORE_APPLE_ID: 0
         XCODE_PROJECT: "ios/App/App.xcodeproj"
         XCODE_SCHEME: "App"
-      node: 20
+      node: 22
       xcode: latest
     scripts:
       - name: Install npm dependencies
