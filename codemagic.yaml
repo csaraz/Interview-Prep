@@ -1,14 +1,15 @@
 # Codemagic CI — Mac-less iOS build for Interview Prep (Capacitor 8 / SPM).
 #
-# One-time setup in the Codemagic UI:
-#   1) Team → Integrations → App Store Connect → the existing API key named "CodemagicAPIKey"
-#   2) Run the `ios-bootstrap` workflow ONCE — it registers the Bundle ID and creates
-#      the signing certificate/profile automatically (no Apple Developer portal clicking).
-#   3) Create the app in App Store Connect (the Bundle ID now exists in the dropdown),
-#      put its numeric App ID into APP_STORE_APPLE_ID below, then run `ios-testflight`.
+# Setup order:
+#   1) Run `ios-bootstrap` once — it registers the Bundle ID and creates the
+#      signing certificate + provisioning profile automatically.
+#   2) Create the app in App Store Connect (the Bundle ID is now in the dropdown),
+#      put its numeric App ID into APP_STORE_APPLE_ID below.
+#   3) Run `ios-testflight` — builds and uploads to TestFlight.
 
-definitions:
-  base: &base
+workflows:
+  ios-bootstrap:
+    name: Interview Prep — bootstrap signing + IPA
     max_build_duration: 60
     instance_type: mac_mini_m2
     integrations:
@@ -20,52 +21,62 @@ definitions:
         XCODE_SCHEME: "App"
       node: 20
       xcode: latest
-  build_steps: &build_steps
-    - name: Install npm dependencies
-      script: npm ci || npm install
-    - name: Web build + Capacitor sync
-      script: |
-        npm run build
-        npx cap sync ios
-    - name: Signing (creates Bundle ID, certificate and profile if missing)
-      script: |
-        set -e
-        keychain initialize
-        openssl genrsa -out /tmp/cert_key.pem 2048
-        app-store-connect fetch-signing-files "$BUNDLE_ID" \
-          --type IOS_APP_STORE \
-          --certificate-key @file:/tmp/cert_key.pem \
-          --create
-        keychain add-certificates
-        xcode-project use-profiles
-
-workflows:
-  # Run this first — no App Store Connect app record needed.
-  ios-bootstrap:
-    <<: *base
-    name: Interview Prep — bootstrap signing + IPA
     scripts:
-      - *build_steps
+      - name: Install npm dependencies
+        script: npm ci || npm install
+      - name: Web build + Capacitor sync
+        script: |
+          npm run build
+          npx cap sync ios
+      - name: Signing (creates Bundle ID, certificate and profile if missing)
+        script: |
+          set -e
+          keychain initialize
+          openssl genrsa -out /tmp/cert_key.pem 2048
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --certificate-key @file:/tmp/cert_key.pem \
+            --create
+          keychain add-certificates
+          xcode-project use-profiles
       - name: Build IPA
         script: xcode-project build-ipa --project "$XCODE_PROJECT" --scheme "$XCODE_SCHEME"
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
 
-  # Run this once the app exists in App Store Connect and APP_STORE_APPLE_ID is filled in.
   ios-testflight:
-    <<: *base
     name: Interview Prep — iOS TestFlight
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: CodemagicAPIKey
     environment:
       vars:
         BUNDLE_ID: "com.araz.interviewprep"
-        APP_STORE_APPLE_ID: 0            # <-- replace with the numeric App Store Connect app ID
+        APP_STORE_APPLE_ID: 0
         XCODE_PROJECT: "ios/App/App.xcodeproj"
         XCODE_SCHEME: "App"
       node: 20
       xcode: latest
     scripts:
-      - *build_steps
+      - name: Install npm dependencies
+        script: npm ci || npm install
+      - name: Web build + Capacitor sync
+        script: |
+          npm run build
+          npx cap sync ios
+      - name: Signing
+        script: |
+          set -e
+          keychain initialize
+          openssl genrsa -out /tmp/cert_key.pem 2048
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --certificate-key @file:/tmp/cert_key.pem \
+            --create
+          keychain add-certificates
+          xcode-project use-profiles
       - name: Bump build number
         script: |
           cd ios/App
