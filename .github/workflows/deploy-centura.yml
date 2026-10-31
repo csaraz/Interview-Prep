@@ -1,0 +1,40 @@
+# Deploys the built site to Centura shared hosting over FTP on every push to main.
+#
+# One-time setup (GitHub → Settings → Secrets and variables → Actions → New secret):
+#   FTP_SERVER    e.g. ftp.yourdomain.az   (from the Centura cPanel / welcome email)
+#   FTP_USERNAME  your FTP user
+#   FTP_PASSWORD  your FTP password
+# Optional repo *variable* (not secret):
+#   FTP_DIR       target folder, defaults to /public_html/
+#
+# Nothing here needs a server-side rewrite rule: the app is static and uses hash
+# routing (#/article/...), and Vite builds with relative asset paths (base: './').
+
+name: Deploy to Centura (FTP)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  ftp-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+
+      - name: Upload dist/ to Centura
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./dist/
+          server-dir: ${{ vars.FTP_DIR || '/public_html/' }}
+          dangerous-clean-slate: false
