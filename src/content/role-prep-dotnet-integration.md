@@ -1,52 +1,53 @@
 ---
-title: "Role Prep: Senior .NET Integration Engineer (fintech/ERP)"
+title: "Role Prep: Senior .NET Integration Engineer (lesson plan)"
 level: Senior
 category: Interview Lists
-tags: interview-qa, integration, checklist, preparation, soap, sql-server
+tags: interview-qa, checklist, preparation, lesson, dotnet
 order: 5
 ---
 
-Targeted plan for the DistantJob / fintech AP platform role: integrations between the product and ERP/accounting systems (NetSuite, QuickBooks, Sage, Dynamics).
+Prep track for the DistantJob / fintech AP platform role. **Format: lessons, not quizzes.** Each lesson is: mental model → the mechanism precisely (including what gets stated wrong) → trade-offs with their costs → the five questions an interviewer asks.
 
-## What the job description actually demands
+## The order (as decided)
 
-| Must-have | My current standing |
-|---|---|
-| Strong C# / .NET backend + APIs | ✅ core strength |
-| REST **and SOAP**: auth, error handling, retries, versioning | ⚠️ SOAP is the real gap |
-| Data sync, transformation, reconciliation | ⚠️ done in spirit, need the vocabulary |
-| Partial failures, retries, eventual consistency, **idempotency**, audit trails | ✅ Outbox/quorum queues/chaos testing |
-| **SQL Server**: query design, optimization, data modeling | ✅ strong — and there's a fresh production win to tell |
-| Event-driven / message-based architecture | ✅ RabbitMQ, Kafka, MassTransit |
-| ERP systems (NetSuite/QuickBooks/Sage/Dynamics) | ❌ never used — parked to the end on purpose |
-| Azure (Service Bus, Functions, API Management) | ⚠️ partial (Functions yes) |
-| SFTP / EDI / file-based patterns | ❌ gap |
-| Observability: structured logging, tracing | ✅ Serilog, OTel, Grafana, Datadog |
-| AI-assisted development (Cursor, Claude Code, Copilot) | ✅ daily |
+**Block A — .NET core and concurrency**
+1. **Threads, the thread pool, and what async actually buys you** ✅ written
+2. **async/await mechanics** — the state machine, SynchronizationContext, ConfigureAwait, ValueTask, async streams, cancellation
+3. **Synchronization and the memory model** — lock/Monitor, Interlocked, volatile and barriers, SemaphoreSlim, concurrent collections: which is correct when
+4. **Parallelism** — Parallel.For/ForEach, PLINQ, partitioning, Channels, backpressure
+5. **Memory and GC under load** — generations, LOH, allocation pressure, pooling, Span
 
-## The daily plan
+**Block B — ASP.NET Core**
+6. Request pipeline and middleware, filters, model binding
+7. DI lifetimes and the captive-dependency class of bugs
+8. API design under failure: timeouts, retries, idempotency, rate limiting
+9. EF Core and Dapper: tracking, N+1, projections, compiled queries
 
-**Lesson 1 — The domain first:** what an ERP is, AP vocabulary, why integration is hard (no prior accounting knowledge assumed)
-**Lesson 2 — SOAP for .NET integration engineers** (the one must-have missing from the current stack)
-**Day 2 — Sync patterns:** full vs delta sync, watermarks/cursors, field mapping and transformation, dedup, backfills
-**Day 3 — Partial failure:** idempotency keys, retry/backoff taxonomy, audit trails, compensation, eventual consistency the business can live with
-**Day 4 — SQL Server I:** query design, execution plans, SARGability, parameter sniffing, covering indexes
-**Day 5 — SQL Server II:** modeling for integrations — staging tables, natural vs surrogate keys, `MERGE`/upsert, bulk load, multi-tenant schemas
-**Day 6 — SQL Server III:** concurrency — isolation levels, blocking vs deadlock, `rowversion` optimistic concurrency — plus rehearsing the 7×–70× performance story with real numbers
-**Day 7 — Event-driven:** Azure Service Bus vs RabbitMQ/Kafka, outbox, DLQ and poison messages, ordering and sessions
-**Day 8 — Azure for integrations:** Service Bus, Functions (timer/queue triggers), API Management, Key Vault
-**Day 9 — Observability and RCA:** correlation IDs across systems, tracing an integration failure end to end, alerting that isn't noise
-**Day 10 — ERP crash course:** what NetSuite/QuickBooks/Sage/Dynamics actually are, AP and fund-administration vocabulary, and how to answer "you haven't used X" without bluffing
-**Day 11 — Mock:** behavioral + a live design question ("design the integration layer for a new ERP")
+**Block C — Data and messaging**
+10. SQL Server: query design and execution plans
+11. SQL Server: modeling, upserts, bulk operations, concurrency and isolation
+12. **Redis** — caching patterns, invalidation, distributed locks, rate limiting
+13. **Kafka** — log semantics, partitions, consumer groups, delivery guarantees
+14. RabbitMQ vs Kafka vs Service Bus: choosing, and the outbox underneath
+
+**Block D — Distributed systems**
+15. Microservices boundaries, data ownership, the distributed monolith trap
+16. Consistency: sagas, outbox, idempotency, exactly-once as a myth
+17. Resilience: circuit breakers, bulkheads, backoff with jitter, graceful degradation
+18. Observability: correlation ids, tracing, SLOs, and how to run an RCA
+
+**Block E — Interview delivery**
+19. The three stories (performance win, reliability rebuild, ownership) with numbers
+20. Mock: behavioural + a live design question
 
 ## The three stories to have polished
 
-1. **Performance:** the SQL rework — covering indexes, tighter lock scope, removed per-request redundant queries; p50/p90/p99 down 7×–70×, tail improved most. Have the measurement method ready (that's what a Staff Engineer will probe).
-2. **Reliability:** notification pipeline — Outbox for atomic at-least-once publishing, six priority RabbitMQ quorum queues via MassTransit, Hazelcast→Redis so consumers went stateless. This *is* the "partial failures, retries, idempotency, audit trails" bullet.
-3. **Ownership:** only senior engineer on the backend platform team, 3–4 parallel workstreams; the query-review practice and the chaos-environment failure-mode map became team standards (runbook).
+1. **Performance:** the SQL rework — covering indexes, tighter lock scope, removed per-request redundant queries; p50/p90/p99 down 7×–70×, tail improving most. Have the *measurement method* ready — that's what a Staff Engineer probes.
+2. **Reliability:** notification pipeline — Outbox for atomic at-least-once publishing, six priority RabbitMQ quorum queues via MassTransit, Hazelcast→Redis so consumers went stateless.
+3. **Ownership:** only senior engineer on the backend platform team, 3–4 parallel workstreams; the query-review practice and the chaos-environment failure-mode map became team standards.
 
 ## The honesty line, pre-scripted
 
-> "I haven't worked with NetSuite, QuickBooks, Sage or Dynamics specifically. I have worked on financial systems — insurance policy issuance and payments — and the patterns underneath your ERP work are my daily job: REST and SOAP with real authentication and versioning, retries and idempotency, delta sync, reconciliation against an authoritative record, and partial-failure handling with audit trails."
+> "I haven't worked with NetSuite, QuickBooks, Sage or Dynamics specifically. I have worked on financial systems — insurance policy issuance and payments — and the patterns underneath that work are my daily job: REST and SOAP with real authentication and versioning, retries and idempotency, delta sync, reconciliation against an authoritative record, and partial-failure handling with audit trails."
 
-Said once, early, without apology. Then redirect to the pattern depth.
+Said once, early, without apology — then redirect to pattern depth.
