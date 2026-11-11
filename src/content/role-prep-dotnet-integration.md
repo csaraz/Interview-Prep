@@ -26,7 +26,8 @@ Targeted plan for the DistantJob / fintech AP platform role: integrations betwee
 
 ## The daily plan
 
-**Day 1 — SOAP for .NET integration engineers** (biggest must-have gap) → *SOAP in .NET* article
+**Lesson 1 — The domain first:** what an ERP is, AP vocabulary, why integration is hard (no prior accounting knowledge assumed)
+**Lesson 2 — SOAP for .NET integration engineers** (the one must-have missing from the current stack)
 **Day 2 — Sync patterns:** full vs delta sync, watermarks/cursors, field mapping and transformation, dedup, backfills
 **Day 3 — Partial failure:** idempotency keys, retry/backoff taxonomy, audit trails, compensation, eventual consistency the business can live with
 **Day 4 — SQL Server I:** query design, execution plans, SARGability, parameter sniffing, covering indexes
